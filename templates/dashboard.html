@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body.dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+        .dark-mode .form-control,
+        .dark-mode .btn,
+        .dark-mode .table {
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border-color: #ffffff;
+        }
+        .dark-mode .table,
+        .dark-mode .table th,
+        .dark-mode .table td {
+            color: #ffffff;  /* Set table text color to white */
+        }
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Dropdown Button for Navigation -->
+        <div class="dropdown my-3">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                Go to
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <li><a class="dropdown-item" href="{{ url_for('landing') }}">Go to Landing Page/Home</a></li>
+                <li><a class="dropdown-item" href="javascript:history.back()">Go to Previous Page</a></li>
+            </ul>
+        </div>
+
+        <h1 class="my-4">Sentiment Analysis Dashboard</h1>
+
+        <!-- Average Sentiment Scores -->
+        <div class="row">
+            <div class="col-md-4">
+                <h4>Average Positive Sentiment: {{ average_positive }}</h4>
+            </div>
+            <div class="col-md-4">
+                <h4>Average Neutral Sentiment: {{ average_neutral }}</h4>
+            </div>
+            <div class="col-md-4">
+                <h4>Average Negative Sentiment: {{ average_negative }}</h4>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Sentiment Data Table -->
+        <h3>Your Sentiment History</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Text</th>
+                    <th>Positive</th>
+                    <th>Neutral</th>
+                    <th>Negative</th>
+                    <th>Compound</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>{{ record.text }}</td>
+                    <td>{{ record.positive }}</td>
+                    <td>{{ record.neutral }}</td>
+                    <td>{{ record.negative }}</td>
+                    <td>{{ record.compound }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Sentiment Chart -->
+        <h3 class="my-4">Sentiment Trend</h3>
+        <canvas id="sentimentChart" width="400" height="200"></canvas>
+
+        <script>
+            // Get sentiment data from the Flask template
+            var labels = {{ labels | tojson }};
+            var positive = {{ positive | tojson }};
+            var neutral = {{ neutral | tojson }};
+            var negative = {{ negative | tojson }};
+
+            // Create the chart
+            var ctx = document.getElementById('sentimentChart').getContext('2d');
+            var sentimentChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Positive Sentiment',
+                        data: positive,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        fill: false
+                    }, {
+                        label: 'Neutral Sentiment',
+                        data: neutral,
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                        fill: false
+                    }, {
+                        label: 'Negative Sentiment',
+                        data: negative,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Entries'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Sentiment Scores'
+                            },
+                            min: 0,
+                            max: 1
+                        }
+                    }
+                }
+            });
+        </script>
+
+        <hr>
+
+        <!-- Delete Sentiment History Button -->
+        <form action="{{ url_for('delete_all_history') }}" method="POST">
+            <button type="submit" class="btn btn-danger">Delete All Sentiment History</button>
+        </form>
+        
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+</body>
+</html>
