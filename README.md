@@ -152,11 +152,5 @@ Chart.js
 Bootstrap 4
 
 
-🙋 Author
-
-Mansi Katoch
-GitHub: https://github.com/Mansikatoch315
-
-
 
 
