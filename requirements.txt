@@ -6,7 +6,7 @@ Flask-SQLAlchemy==3.1.1
 SQLAlchemy==2.0.23
 nltk==3.8.1
 gunicorn==21.2.0
-chart.js==2.9.4  # Not a Python package, used via CDN in templates
+
 email-validator==2.1.0.post1  # For WTForms EmailField
 
 # Optional for running in production or on platforms like Heroku
