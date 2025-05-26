@@ -49,19 +49,31 @@
     </form>
 
     {% if final %}
-        <div class="mt-4">
-            <h4>Sentiment of:</h4>
-            <blockquote class="blockquote">{{ text1 }}</blockquote>
-            <h5 class="text-success">is {{ final * 100 | round(2) }}% Positive</h5>
+    <div class="mt-4">
+        <h4>Sentiment of:</h4>
+        <blockquote class="blockquote">{{ text1 }}</blockquote>
 
-            <table class="table table-bordered mt-3">
-                <tr><th>Positive</th><td>{{ text2 }}</td></tr>
-                <tr><th>Neutral</th><td>{{ text3 }}</td></tr>
-                <tr><th>Negative</th><td>{{ text5 }}</td></tr>
-                <tr><th>Compound</th><td>{{ text4 }}</td></tr>
-            </table>
-        </div>
-    {% endif %}
+        {% set sentiment_label = 'Positive' %}
+        {% set sentiment_score = text2 %}
+
+        {% if text5 > text2 and text5 > text3 %}
+            {% set sentiment_label = 'Negative' %}
+            {% set sentiment_score = text5 %}
+        {% elif text3 > text2 and text3 > text5 %}
+            {% set sentiment_label = 'Neutral' %}
+            {% set sentiment_score = text3 %}
+        {% endif %}
+
+        <h5 class="text-success">is {{ (sentiment_score * 100) | round(2) }}% {{ sentiment_label }}</h5>
+
+        <table class="table table-bordered mt-3">
+            <tr><th>Positive</th><td>{{ text2 }}</td></tr>
+            <tr><th>Neutral</th><td>{{ text3 }}</td></tr>
+            <tr><th>Negative</th><td>{{ text5 }}</td></tr>
+            <tr><th>Compound</th><td>{{ text4 }}</td></tr>
+        </table>
+    </div>
+{% endif %}
 </div>
 
 <!-- Theme Toggle Script -->
