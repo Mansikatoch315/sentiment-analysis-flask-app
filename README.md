@@ -75,10 +75,6 @@ nltk.download('stopwords')
 
 python app.py
 
-Then open your browser and go to:
-
-http://127.0.0.1:5002
-
 
 
 📤 If Running on a New Computer
