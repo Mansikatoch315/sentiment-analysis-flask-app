@@ -1,29 +1,32 @@
 from flask import Flask, request, render_template, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from transformers import pipeline
 from werkzeug.security import generate_password_hash, check_password_hash
-import nltk
-from nltk.corpus import stopwords
 from flask_mail import Mail, Message
-from flask import flash, redirect, url_for
+import nltk
 
 # Download stopwords
 nltk.download('stopwords')
 
-# Flask app initialization
+# Initialize Flask app
 app = Flask(__name__)
+
+# Initialize sentiment analysis pipeline
+sentiment_pipeline = pipeline("sentiment-analysis")
+
+# Mail configuration (replace with your actual credentials)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'your_email@gmail.com'  # replace with your email
-app.config['MAIL_PASSWORD'] = 'your_app_password'     # use App Password or secure method
+app.config['MAIL_USERNAME'] = 'your_email@gmail.com'
+app.config['MAIL_PASSWORD'] = 'your_app_password'
 app.config['MAIL_DEFAULT_SENDER'] = 'your_email@gmail.com'
 
 mail = Mail(app)
-app.secret_key = 'replace_with_your_real_secret_key'  # Replace this securely
+app.secret_key = 'replace_with_your_real_secret_key'
 
-# Configure database
+# Database setup
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///sentiments.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -50,6 +53,7 @@ class SentimentRecord(db.Model):
     negative = db.Column(db.Float)
     compound = db.Column(db.Float)
 
+# Load user for login
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -66,22 +70,16 @@ def features():
 @app.route('/contact', methods=['GET', 'POST'])
 def contact():
     if request.method == 'POST':
-        # your form processing and sending email code here
-        
-        # After successful send:
-        flash('Message sent successfully!', 'success')  # 'success' category makes green alert
+        # Add email logic here if needed
+        flash('Message sent successfully!', 'success')
         return redirect(url_for('contact'))
-
     return render_template('contact.html')
-
-
 
 @app.route('/home')
 def home():
     if current_user.is_authenticated:
         return redirect(url_for('sentiment'))
     return redirect(url_for('login'))
-
 
 @app.route('/sentiment', methods=['GET'])
 @login_required
@@ -91,29 +89,30 @@ def sentiment():
 @app.route('/sentiment', methods=['POST'])
 @login_required
 def analyze_sentiment():
-    stop_words = set(stopwords.words('english'))
-    text1 = request.form['text1'].lower()
-    text_final = ''.join(c for c in text1 if not c.isdigit())
-    processed = ' '.join([word for word in text_final.split() if word not in stop_words])
+    text = request.form['text1']
+    result = sentiment_pipeline(text)[0]
 
-    sa = SentimentIntensityAnalyzer()
-    scores = sa.polarity_scores(processed)
-    compound = round((1 + scores['compound']) / 2, 2)
+    label = result['label']
+    confidence = round(result['score'], 2)
 
+    compound = confidence if label == "POSITIVE" else 1 - confidence
+
+    # Save record in DB
     record = SentimentRecord(
         user_id=current_user.id,
-        text=text_final,
-        positive=scores['pos'],
-        neutral=scores['neu'],
-        negative=scores['neg'],
+        text=text,
+        positive=confidence if label == "POSITIVE" else 0.0,
+        neutral=0.0,
+        negative=confidence if label == "NEGATIVE" else 0.0,
         compound=compound
     )
     db.session.add(record)
     db.session.commit()
 
-    return render_template('form.html', final=compound, text1=text_final,
-                           text2=scores['pos'], text3=scores['neu'],
-                           text4=compound, text5=scores['neg'])
+    return render_template('form.html',
+                           final=label,
+                           confidence=confidence,
+                           text1=text)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -140,11 +139,10 @@ def login():
         if user and check_password_hash(user.password_hash, password):
             login_user(user)
             flash('User successfully logged in!', 'success')
-            return render_template('login.html', redirect_after_login=True)  # Don't redirect yet
+            return render_template('login.html', redirect_after_login=True)
         else:
             flash('Invalid credentials', 'danger')
     return render_template('login.html')
-
 
 @app.route('/logout')
 @login_required
@@ -184,7 +182,7 @@ def delete_all_history():
     flash('Your sentiment history has been deleted.', 'success')
     return redirect(url_for('dashboard'))
 
-# Main
+# Run the application
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
