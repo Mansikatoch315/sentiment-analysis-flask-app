@@ -1,8 +1,9 @@
 # Essential build and packaging tools (ensure these are installed first)
 pip>=24.0
-setuptools>=65.5.0
+setuptools>=60
 wheel>=0.40.0
 build>=1.0.3
+
 
 # Core dependencies
 blinker==1.9.0
