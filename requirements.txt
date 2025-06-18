@@ -1,6 +1,8 @@
 # Ensure essential build tools are present first
 setuptools>=65.5.1
-wheel
+wheel>=0.40.0
+build
+
 
 # Core dependencies
 blinker==1.9.0
