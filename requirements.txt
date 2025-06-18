@@ -1,8 +1,8 @@
-# Ensure essential build tools are present first
-setuptools>=65.5.1
+# Essential build and packaging tools (ensure these are installed first)
+pip>=24.0
+setuptools>=65.5.0
 wheel>=0.40.0
-build
-
+build>=1.0.3
 
 # Core dependencies
 blinker==1.9.0
@@ -33,8 +33,8 @@ scipy==1.10.1
 regex==2024.11.6
 joblib==1.3.2
 threadpoolctl==3.6.0
-torch==2.1.0
-transformers==4.31.0
+torch==2.1.0  # Note: torch might be the main culprit for Python 3.13
+transformers==4.31.0 # Also potentially problematic with very new Python
 vaderSentiment==3.2.1
 tqdm==4.67.1
 
